@@ -1,0 +1,38 @@
+[general]
+name=Landsat Thermal & UHI Processor
+qgisMinimumVersion=3.16
+qgisMaximumVersion=3.99
+description=Landsat 8/9 Collection 2 processing: Brightness Temperature (BT), Land Surface Temperature (LST), and Urban Heat Island (UHI) analysis. Includes UTFVI, NDBI, difference maps, and CSV statistics. / Обработка Landsat 8/9 Collection 2: яркостная температура (BT), температура поверхности (LST) и анализ городского теплового острова (UHI). Включает UTFVI, NDBI, разностные карты и CSV-статистику.
+version=2.2.0
+author=Your Name
+email=your@email.com
+
+about=
+    Three processing modes in one module:
+      • BT       — Brightness Temperature (Band 10)
+      • LST      — Land Surface Temperature (B4+B5+B10, NDVI-based emissivity)
+      • LST+UHI  — LST + UTFVI + UHI difference + NDBI + CSV statistics
+
+    Support: Landsat 8 (LC08) / Landsat 9 (LC09), Collection 2, Level-1.
+    Requirements: numpy, GDAL (included in a standard QGIS installation).
+
+    Три режима в одном модуле:
+      • BT       — яркостная температура (Band 10)
+      • LST      — температура поверхности (B4+B5+B10, NDVI-эмиссивность)
+      • LST+UHI  — LST + UTFVI + UHI diff + NDBI + CSV-статистика
+
+    Поддержка: Landsat 8 (LC08) / Landsat 9 (LC09), Collection 2, Level-1.
+    Требует: numpy, GDAL (входят в стандартную установку QGIS).
+
+repository=https://github.com/segikill/Landsat-Thermal-UHI-Processor-Qgis-plugins-
+homepage=https://github.com/segikill/Landsat-Thermal-UHI-Processor-Qgis-plugins-
+
+tags=landsat, thermal, LST, UHI, remote sensing, raster, temperature, NDVI, NDBI
+
+icon=icons/icon.png
+
+experimental=False
+deprecated=False
+server=False
+
+hasProcessingProvider=yes
