@@ -1,223 +1,359 @@
-# Landsat Thermal & UHI Processor — QGIS Plugin
+# Landsat Thermal & UHI Processor for QGIS
 
-## English
+<p align="center">
+  <strong>QGIS Processing plugin for Landsat 8/9 thermal processing, LST mapping and Urban Heat Island analysis.</strong>
+</p>
 
-**Version:** 2.2.0  
-**Compatibility:** QGIS 3.16+  
-**Dependencies:** numpy, GDAL (included in a standard QGIS installation)
+<p align="center">
+  <a href="#english">English</a> · <a href="#русский">Русский</a>
+</p>
 
 ---
+
+# English
+
+## Overview
+
+**Landsat Thermal & UHI Processor** is a QGIS Processing plugin for Landsat 8/9 Collection 2 scenes. It automates the main raster operations required for Brightness Temperature, Land Surface Temperature and Urban Heat Island analysis.
+
+The plugin is intended for urban climate studies, surface temperature mapping, remote sensing education and applied GIS workflows.
+
+## What the plugin does
+
+- Reads Landsat metadata from the `*_MTL.txt` file.
+- Calculates Brightness Temperature from Band 10.
+- Calculates NDVI and NDVI-based land surface emissivity.
+- Calculates Land Surface Temperature in degrees Celsius.
+- Performs Urban Heat Island analysis using a rural reference zone.
+- Calculates NDBI for built-up area interpretation.
+- Classifies UTFVI values into thermal stress classes.
+- Supports optional `QA_PIXEL` cloud masking.
+- Exports raster outputs and optional CSV statistics.
+- Runs directly from the QGIS Processing Toolbox.
+
+## Processing modes
+
+| Mode | Purpose | Required data |
+|---|---|---|
+| `BT` | Brightness Temperature calculation | B10 + MTL |
+| `LST` | Land Surface Temperature with emissivity correction | B4 + B5 + B10 + MTL |
+| `LST+UHI` | Full workflow: LST, UTFVI, UHI difference, NDBI and statistics | B4 + B5 + B6 + B10 + MTL |
+
+## Requirements
+
+- QGIS 3.16 or newer.
+- Python environment included with QGIS.
+- NumPy.
+- GDAL.
+- Unpacked Landsat 8/9 Collection 2 Level-1 scene.
+
+NumPy and GDAL are usually included in the standard QGIS installation.
 
 ## Installation
 
-### Method 1 — Plugin Manager (ZIP)
+### Install from ZIP
 
-1. In QGIS, open **Plugins → Manage and Install Plugins → Install from ZIP**.
-2. Select `landsat_thermal_uhi.zip`.
-3. Click **Install Plugin**.
+1. Open QGIS.
+2. Go to **Plugins → Manage and Install Plugins → Install from ZIP**.
+3. Select the plugin ZIP archive.
+4. Click **Install Plugin**.
+5. Enable the plugin in the plugin manager if it is not enabled automatically.
 
-### Method 2 — Manual installation
+### Manual installation
 
-1. Copy the `landsat_thermal_uhi` folder to the QGIS plugins directory:
-   - **Windows:** `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
-   - **Linux:** `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`
-   - **macOS:** `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/`
-2. Restart QGIS.
-3. Enable the plugin: **Plugins → Manage and Install Plugins** → find `Landsat Thermal & UHI Processor`.
+Copy the plugin folder to the QGIS profile plugin directory:
 
----
+```text
+Windows: %APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\
+Linux:   ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/
+macOS:   ~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/
+```
+
+Restart QGIS and enable the plugin in **Plugins → Manage and Install Plugins**.
 
 ## Usage
 
-The algorithm appears in the **Processing Toolbox** under the **Landsat Tools** group.
+After installation, open the algorithm from the Processing Toolbox:
 
-```
+```text
 Processing Toolbox
 └── Landsat Tools
     └── Landsat 8/9 — Thermal & UHI Processor
 ```
 
-### Input parameters
+Basic workflow:
+
+1. Download and unpack a Landsat 8/9 Collection 2 Level-1 scene.
+2. Open the algorithm in the QGIS Processing Toolbox.
+3. Select the scene folder.
+4. Choose the processing mode.
+5. Set the output folder.
+6. Run the algorithm.
+7. Review the generated raster layers and CSV statistics.
+
+## Input data
+
+The scene folder must contain the original Landsat files:
+
+| File or band | Purpose |
+|---|---|
+| `*_MTL.txt` | Scene metadata and calibration coefficients |
+| Band 4 | Red band for NDVI |
+| Band 5 | Near-infrared band for NDVI |
+| Band 6 | Short-wave infrared band for NDBI |
+| Band 10 | Thermal infrared band for BT and LST |
+| `QA_PIXEL` | Optional cloud mask |
+
+## Parameters
 
 | Parameter | Description |
 |---|---|
-| **Scene folder** | Path to the folder with unpacked Landsat files (`*.TIF`, `*_MTL.txt`) |
-| **Processing mode** | BT / LST / LST+UHI |
-| **Output folder** | Folder where the output TIFF files are saved |
-| **Rural NDVI threshold** | UHI reference threshold for the “green” rural zone, usually 0.30–0.40 |
-| **Export CSV** | Save scene statistics to CSV; new rows are appended on each run |
-| **Export diagnostic masks** | Save auxiliary masks for valid pixels, urban zones and rural zones |
-| **File prefix** | Optional custom prefix for output file names |
+| `Landsat scene folder` | Folder with unpacked Landsat scene files. |
+| `Processing mode` | Select `BT`, `LST` or `LST+UHI`. |
+| `QA_PIXEL cloud mask` | Apply cloud masking using the QA_PIXEL layer. |
+| `Rural NDVI threshold` | NDVI threshold for rural reference pixels in UHI analysis. |
+| `Export statistics to CSV` | Save summary statistics to a CSV file. |
+| `Export diagnostic masks` | Save auxiliary masks for quality control. |
+| `Output folder` | Folder for generated outputs. |
+| `File name prefix` | Optional custom prefix for output files. |
 
-### Processing modes
+## Output files
 
-| Mode | Description | Required files |
-|---|---|---|
-| **BT** | Brightness Temperature | B10 + MTL |
-| **LST** | Land Surface Temperature with NDVI-based emissivity correction | B4 + B5 + B10 + MTL |
-| **LST+UHI** | Full UHI workflow: LST + UTFVI + UHI difference + NDBI + CSV statistics | B4 + B5 + B6 + B10 + MTL |
+Depending on the selected mode, the plugin may generate:
 
-### Output files in UHI mode
-
-| File | Description |
+| Output | Description |
 |---|---|
-| `*_LST.tif` | Land Surface Temperature, °C |
-| `*_UTFVI.tif` | Urban Thermal Field Variance Index, 6 classes |
-| `*_UHI_diff.tif` | LST minus rural-zone mean LST, °C |
-| `*_NDVI.tif` | Normalized Difference Vegetation Index |
-| `*_NDBI.tif` | Normalized Difference Built-up Index |
-| `*_stats.csv` | Scene summary statistics |
+| `*_BT.tif` | Brightness Temperature raster. |
+| `*_LST.tif` | Land Surface Temperature raster, °C. |
+| `*_NDVI.tif` | Normalized Difference Vegetation Index. |
+| `*_NDBI.tif` | Normalized Difference Built-up Index. |
+| `*_UTFVI.tif` | Urban Thermal Field Variance Index classes. |
+| `*_UHI_diff.tif` | Difference between LST and rural mean LST, °C. |
+| `*_stats.csv` | Summary scene statistics. |
+| diagnostic masks | Auxiliary masks for valid, urban and rural pixels. |
 
-### UTFVI classification (Guha et al., 2018)
+## UTFVI classes
 
-| Range | Class |
+| UTFVI range | Class |
 |---|---|
-| < 0 | No UHI |
-| 0.000–0.005 | Weak |
-| 0.005–0.010 | Moderate |
-| 0.010–0.015 | Strong |
-| 0.015–0.020 | Intense |
-| > 0.020 | Extreme |
+| `< 0` | No UHI |
+| `0.000–0.005` | Weak |
+| `0.005–0.010` | Moderate |
+| `0.010–0.015` | Strong |
+| `0.015–0.020` | Intense |
+| `> 0.020` | Extreme |
 
----
+## Project structure
 
-## Plugin structure
-
-```
+```text
 landsat_thermal_uhi/
-├── __init__.py                   # QGIS entry point
-├── plugin.py                     # Provider registration and toolbar/menu action
-├── provider.py                   # QgsProcessingProvider
-├── landsat_thermal_processor.py  # Main QgsProcessingAlgorithm
-├── metadata.txt                  # Plugin Manager metadata
+├── __init__.py                   # QGIS plugin entry point
+├── plugin.py                     # Plugin initialization and provider registration
+├── provider.py                   # QGIS Processing provider
+├── landsat_thermal_processor.py  # Main processing algorithm
+├── metadata.txt                  # QGIS plugin metadata
+├── README.md                     # Repository documentation
+├── LICENSE                       # GPL-2.0 license text
 ├── icons/
-│   └── icon.png
-└── README.md
+│   └── icon.png                  # Plugin icon
+└── core/
+    ├── constants.py              # Constants and class names
+    ├── io.py                     # File search, raster I/O, CSV export
+    ├── masks.py                  # QA/cloud and analysis masks
+    ├── physics.py                # Thermal and emissivity calculations
+    ├── uhi.py                    # UHI-related calculations
+    ├── validation.py             # Input and output validation
+    └── visualization.py          # Raster styling and QGIS layer loading
 ```
 
----
+## Limitations
 
-## Supported satellites
+- The plugin expects Landsat Collection 2 Level-1 file naming and metadata structure.
+- LST and UHI results depend on atmospheric conditions, scene quality, cloud masking and land cover composition.
+- The rural reference zone is selected using an NDVI threshold; this approach may require adjustment for arid, mountainous, coastal or highly fragmented landscapes.
+- The tool is intended for GIS analysis and educational workflows. Scientific publication may require additional atmospheric correction, validation and uncertainty assessment.
 
-- **Landsat 8** (LC08), Collection 2, Level-1
-- **Landsat 9** (LC09), Collection 2, Level-1
+## License
 
----
+This plugin is distributed under the GNU General Public License, version 2. See the `LICENSE` file in the plugin package.
 
 ## References
 
-- Sobrino et al. (2004) — NDVI-based emissivity
-- Guha et al. (2018) — UTFVI classification
-- Zha et al. (2003) — NDBI (Normalized Difference Built-up Index)
+- Sobrino, J. A., Jiménez-Muñoz, J. C., & Paolini, L. (2004). Land surface temperature retrieval from Landsat TM 5. *Remote Sensing of Environment*.
+- Guha, S., Govil, H., Dey, A., & Gill, N. (2018). Analytical study of land surface temperature with NDVI and NDBI using Landsat 8 OLI and TIRS data. *Journal of Earth System Science*.
+- Zha, Y., Gao, J., & Ni, S. (2003). Use of normalized difference built-up index in automatically mapping urban areas from TM imagery. *International Journal of Remote Sensing*.
 
 ---
 
-## Русский
+# Русский
 
-**Версия:** 2.2.0  
-**Совместимость:** QGIS 3.16+  
-**Зависимости:** numpy, GDAL (входят в стандартную установку QGIS)
+## Обзор
 
----
+**Landsat Thermal & UHI Processor** — это плагин QGIS Processing для сцен Landsat 8/9 Collection 2. Он автоматизирует основные растровые операции для расчёта яркостной температуры, температуры поверхности и анализа городского теплового острова.
+
+Плагин подходит для исследований городского климата, картографирования температуры поверхности, обучения дистанционному зондированию и прикладных ГИС-задач.
+
+## Что делает плагин
+
+- Считывает метаданные Landsat из файла `*_MTL.txt`.
+- Рассчитывает яркостную температуру по Band 10.
+- Рассчитывает NDVI и эмиссивность поверхности на основе NDVI.
+- Рассчитывает температуру поверхности в градусах Цельсия.
+- Выполняет анализ городского теплового острова с использованием сельской референсной зоны.
+- Рассчитывает NDBI для интерпретации застроенных территорий.
+- Классифицирует значения UTFVI по классам тепловой нагрузки.
+- Поддерживает опциональную облачную маску `QA_PIXEL`.
+- Экспортирует растровые результаты и CSV-статистику.
+- Запускается напрямую из панели Processing Toolbox QGIS.
+
+## Режимы обработки
+
+| Режим | Назначение | Необходимые данные |
+|---|---|---|
+| `BT` | Расчёт яркостной температуры | B10 + MTL |
+| `LST` | Расчёт температуры поверхности с коррекцией эмиссивности | B4 + B5 + B10 + MTL |
+| `LST+UHI` | Полный цикл: LST, UTFVI, UHI difference, NDBI и статистика | B4 + B5 + B6 + B10 + MTL |
+
+## Требования
+
+- QGIS 3.16 или новее.
+- Python-среда, входящая в состав QGIS.
+- NumPy.
+- GDAL.
+- Распакованная сцена Landsat 8/9 Collection 2 Level-1.
+
+NumPy и GDAL обычно входят в стандартную установку QGIS.
 
 ## Установка
 
-### Способ 1 — через менеджер плагинов (ZIP)
+### Установка из ZIP
 
-1. В QGIS откройте **Плагины → Управление плагинами → Установить из ZIP**.
-2. Укажите файл `landsat_thermal_uhi.zip`.
-3. Нажмите **Установить плагин**.
+1. Откройте QGIS.
+2. Перейдите в **Плагины → Управление плагинами → Установить из ZIP**.
+3. Выберите ZIP-архив плагина.
+4. Нажмите **Установить плагин**.
+5. Активируйте плагин в менеджере плагинов, если он не включился автоматически.
 
-### Способ 2 — вручную
+### Ручная установка
 
-1. Скопируйте папку `landsat_thermal_uhi` в директорию плагинов QGIS:
-   - **Windows:** `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
-   - **Linux:** `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`
-   - **macOS:** `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/`
-2. Перезапустите QGIS.
-3. Активируйте плагин: **Плагины → Управление плагинами** → найдите `Landsat Thermal & UHI Processor`.
+Скопируйте папку плагина в директорию плагинов профиля QGIS:
 
----
+```text
+Windows: %APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\
+Linux:   ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/
+macOS:   ~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/
+```
+
+Перезапустите QGIS и включите плагин через **Плагины → Управление плагинами**.
 
 ## Использование
 
-Алгоритм появится в **Панели инструментов обработки** в группе **Landsat Tools**.
+После установки алгоритм доступен в панели Processing Toolbox:
 
-```
+```text
 Processing Toolbox
 └── Landsat Tools
     └── Landsat 8/9 — Thermal & UHI Processor
 ```
 
-### Входные параметры
+Базовый порядок работы:
+
+1. Скачайте и распакуйте сцену Landsat 8/9 Collection 2 Level-1.
+2. Откройте алгоритм в панели Processing Toolbox QGIS.
+3. Укажите папку сцены.
+4. Выберите режим обработки.
+5. Укажите выходную папку.
+6. Запустите алгоритм.
+7. Проверьте созданные растровые слои и CSV-статистику.
+
+## Исходные данные
+
+Папка сцены должна содержать исходные файлы Landsat:
+
+| Файл или канал | Назначение |
+|---|---|
+| `*_MTL.txt` | Метаданные сцены и калибровочные коэффициенты |
+| Band 4 | Красный канал для NDVI |
+| Band 5 | Ближний инфракрасный канал для NDVI |
+| Band 6 | Коротковолновый инфракрасный канал для NDBI |
+| Band 10 | Тепловой инфракрасный канал для BT и LST |
+| `QA_PIXEL` | Опциональная облачная маска |
+
+## Параметры
 
 | Параметр | Описание |
 |---|---|
-| **Папка сцены** | Путь к папке с распакованными файлами Landsat (`*.TIF`, `*_MTL.txt`) |
-| **Режим обработки** | BT / LST / LST+UHI |
-| **Выходная папка** | Папка, куда сохраняются результирующие TIFF |
-| **NDVI-порог сельской зоны** | Эталонный порог для “зелёной” сельской зоны в UHI-анализе, обычно 0.30–0.40 |
-| **Экспорт CSV** | Сохранение статистики сцены в CSV; новые строки добавляются при каждом запуске |
-| **Экспорт диагностических масок** | Сохранение вспомогательных масок валидных пикселей, городской и сельской зон |
-| **Префикс файлов** | Опциональный пользовательский префикс для имён выходных файлов |
+| `Landsat scene folder` | Папка с распакованными файлами сцены Landsat. |
+| `Processing mode` | Выбор режима `BT`, `LST` или `LST+UHI`. |
+| `QA_PIXEL cloud mask` | Применение облачной маски на основе QA_PIXEL. |
+| `Rural NDVI threshold` | NDVI-порог для выбора сельских референсных пикселей. |
+| `Export statistics to CSV` | Сохранение сводной статистики в CSV. |
+| `Export diagnostic masks` | Сохранение вспомогательных масок для проверки. |
+| `Output folder` | Папка для сохранения результатов. |
+| `File name prefix` | Дополнительный префикс имён выходных файлов. |
 
-### Режимы
+## Выходные файлы
 
-| Режим | Описание | Нужные файлы |
-|---|---|---|
-| **BT** | Яркостная температура | B10 + MTL |
-| **LST** | Температура поверхности с учётом NDVI-эмиссивности | B4 + B5 + B10 + MTL |
-| **LST+UHI** | Полный UHI-анализ: LST + UTFVI + UHI diff + NDBI + CSV-статистика | B4 + B5 + B6 + B10 + MTL |
+В зависимости от выбранного режима плагин может формировать:
 
-### Выходные файлы в режиме UHI
-
-| Файл | Описание |
+| Результат | Описание |
 |---|---|
-| `*_LST.tif` | Температура поверхности, °C |
-| `*_UTFVI.tif` | Urban Thermal Field Variance Index, 6 классов |
-| `*_UHI_diff.tif` | LST минус средняя LST сельской зоны, °C |
-| `*_NDVI.tif` | Нормализованный разностный вегетационный индекс |
-| `*_NDBI.tif` | Нормализованный разностный индекс застройки |
-| `*_stats.csv` | Сводная статистика сцены |
+| `*_BT.tif` | Растр яркостной температуры. |
+| `*_LST.tif` | Растр температуры поверхности, °C. |
+| `*_NDVI.tif` | Нормализованный разностный вегетационный индекс. |
+| `*_NDBI.tif` | Нормализованный разностный индекс застройки. |
+| `*_UTFVI.tif` | Классы Urban Thermal Field Variance Index. |
+| `*_UHI_diff.tif` | Разница между LST и средней LST сельской зоны, °C. |
+| `*_stats.csv` | Сводная статистика сцены. |
+| diagnostic masks | Вспомогательные маски валидных, городских и сельских пикселей. |
 
-### Классификация UTFVI (Guha et al., 2018)
+## Классы UTFVI
 
-| Диапазон | Класс |
+| Диапазон UTFVI | Класс |
 |---|---|
-| < 0 | Нет UHI |
-| 0.000–0.005 | Слабый |
-| 0.005–0.010 | Средний |
-| 0.010–0.015 | Сильный |
-| 0.015–0.020 | Интенсивный |
-| > 0.020 | Экстремальный |
+| `< 0` | Нет UHI |
+| `0.000–0.005` | Слабый |
+| `0.005–0.010` | Средний |
+| `0.010–0.015` | Сильный |
+| `0.015–0.020` | Интенсивный |
+| `> 0.020` | Экстремальный |
 
----
+## Структура проекта
 
-## Структура плагина
-
-```
+```text
 landsat_thermal_uhi/
-├── __init__.py                   # Точка входа QGIS
-├── plugin.py                     # Регистрация провайдера, кнопки и пункта меню
-├── provider.py                   # QgsProcessingProvider
-├── landsat_thermal_processor.py  # Основной алгоритм QgsProcessingAlgorithm
-├── metadata.txt                  # Метаданные для менеджера плагинов
+├── __init__.py                   # точка входа QGIS-плагина
+├── plugin.py                     # инициализация плагина и регистрация провайдера
+├── provider.py                   # провайдер QGIS Processing
+├── landsat_thermal_processor.py  # основной алгоритм обработки
+├── metadata.txt                  # метаданные QGIS-плагина
+├── README.md                     # документация репозитория
+├── LICENSE                       # текст лицензии GPL-2.0
 ├── icons/
-│   └── icon.png
-└── README.md
+│   └── icon.png                  # иконка плагина
+└── core/
+    ├── constants.py              # константы и названия классов
+    ├── io.py                     # поиск файлов, ввод/вывод растров, экспорт CSV
+    ├── masks.py                  # QA/cloud-маски и аналитические маски
+    ├── physics.py                # тепловые расчёты и эмиссивность
+    ├── uhi.py                    # расчёты, связанные с UHI
+    ├── validation.py             # проверка входных и выходных данных
+    └── visualization.py          # стилизация растров и загрузка слоёв в QGIS
 ```
 
----
+## Ограничения
 
-## Поддерживаемые спутники
+- Плагин рассчитан на структуру файлов и метаданных Landsat Collection 2 Level-1.
+- Результаты LST и UHI зависят от атмосферных условий, качества сцены, облачной маски и структуры земного покрова.
+- Сельская референсная зона выбирается по NDVI-порогу; для засушливых, горных, прибрежных или сильно фрагментированных территорий порог может требовать настройки.
+- Инструмент предназначен для ГИС-анализа и учебно-прикладных задач. Для научной публикации могут потребоваться дополнительная атмосферная коррекция, валидация и оценка неопределённости.
 
-- **Landsat 8** (LC08), Collection 2, Level-1
-- **Landsat 9** (LC09), Collection 2, Level-1
+## Лицензия
 
----
+Плагин распространяется на условиях GNU General Public License, version 2. Текст лицензии находится в файле `LICENSE` внутри пакета плагина.
 
-## Литература
+## Источники
 
-- Sobrino et al. (2004) — NDVI-based emissivity
-- Guha et al. (2018) — UTFVI classification
-- Zha et al. (2003) — NDBI (Normalized Difference Built-up Index)
+- Sobrino, J. A., Jiménez-Muñoz, J. C., & Paolini, L. (2004). Методика расчёта температуры поверхности по данным Landsat TM 5.
+- Guha, S., Govil, H., Dey, A., & Gill, N. (2018). Исследование температуры поверхности, NDVI и NDBI по данным Landsat 8 OLI/TIRS.
+- Zha, Y., Gao, J., & Ni, S. (2003). Использование NDBI для автоматического картографирования городских территорий по снимкам TM.
