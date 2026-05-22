@@ -4,8 +4,8 @@ qgisMinimumVersion=3.16
 qgisMaximumVersion=3.99
 description=Landsat 8/9 Collection 2 processing: Brightness Temperature (BT), Land Surface Temperature (LST), and Urban Heat Island (UHI) analysis. Includes UTFVI, NDBI, difference maps, and CSV statistics. / Обработка Landsat 8/9 Collection 2: яркостная температура (BT), температура поверхности (LST) и анализ городского теплового острова (UHI). Включает UTFVI, NDBI, разностные карты и CSV-статистику.
 version=2.2.0
-author=Your Name
-email=your@email.com
+author=Daniil Fedyushchenko
+email=segikill@gmail.com
 
 about=
     Three processing modes in one module:
